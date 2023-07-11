@@ -1,7 +1,9 @@
 #Deep Q-learning Reinforcement Learning for Hide and Seek Game
+
 This project aims to implement Deep Q-learning for a hide and seek game. The AI is dedicated to hiding in a 12x12 grid where black cells are randomly placed. The goal is to train an AI that can efficiently hide on a new map it has never seen during training.
 
 ##Solution (environment.py)
+
 I have created the following functions:
 
      1. create_env: Builds a 12x12 grid world, places random black blocks within the grid, and randomly positions the agents (player and AI) on non-black blocks. It returns the grid, the coordinates of the black cells, and the positions of the player and AI within the grid.
@@ -44,12 +46,15 @@ I have built the following gymnasium environment for training:
           5. The AI's reward is incremented by 10 for each round that the player is not one block away from the AI.
 
 ##Deployment
+
      Conda environment: XXX
      Run the script XXX to train the AI. In the script, you can set the number of training rounds.
 
 ##Dependencies
+
 random gymnasium numpy matplotlib.pyploT
 
 ##Potential Improvements
+
 1. Instead of a random walk for the player, implement a shortest path algorithm. This could speed up training.
 2. Improve the computation of the number of blocks in line with the players.
