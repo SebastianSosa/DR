@@ -55,7 +55,7 @@ I have built the following gymnasium environment for training:
 
 random gymnasium numpy matplotlib.pyploT
 
-##P otential Improvements
+## Potential Improvements
 
 1. Instead of a random walk for the player, implement a shortest path algorithm. This could speed up training.
 2. Improve the computation of the number of blocks in line with the players.
