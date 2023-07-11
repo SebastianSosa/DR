@@ -49,7 +49,7 @@ I have built the following gymnasium environment for training:
 
 1. Export conda environment: environment_DR.yml
    
-3. Run the script XXX to train the AI. In the script, you can set the number of training rounds.
+3. Run the script learn.py to train the AI. In the script, you can set the number of training rounds.
 
 ## Dependencies
 
