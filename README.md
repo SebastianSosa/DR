@@ -2,7 +2,7 @@
 
 This project aims to implement Deep Q-learning for a hide and seek game. The AI is dedicated to hiding in a 12x12 grid where black cells are randomly placed. The goal is to train an AI that can efficiently hide on a new map it has never seen during training.
 
-##Solution (environment.py)
+## Solution (environment.py)
 
 I have created the following functions:
 
@@ -54,7 +54,7 @@ I have built the following gymnasium environment for training:
 
 random gymnasium numpy matplotlib.pyploT
 
-##Potential Improvements
+##P otential Improvements
 
 1. Instead of a random walk for the player, implement a shortest path algorithm. This could speed up training.
 2. Improve the computation of the number of blocks in line with the players.
