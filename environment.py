@@ -71,7 +71,6 @@ def move(current_position, black_cell_ids, grid_size, action):
     row, col = current_position
     new_row = row + direction[0]
     new_col = col + direction[1]
-    print([new_row, new_col])
 
     # Check if the new position is valid and not a black cell
     if (
@@ -81,7 +80,6 @@ def move(current_position, black_cell_ids, grid_size, action):
         and new_col < grid_size
     ):
         block_id = np.ravel_multi_index(np.array([int(new_col), int(new_row)]),(grid_size,grid_size))
-        print(block_id)
         if  block_id not in black_cell_ids:
             return (new_row, new_col)
         else:
@@ -143,9 +141,6 @@ def cell_in_line_players(ai_position, player_position):
     y_coords = np.concatenate((np.ceil(np.linspace(y1, y2, int(abs(x1-x2)+int(abs(y1-y2))))),
                                np.floor(np.linspace(y1, y2, int(abs(x1-x2)+int(abs(y1-y2)))))))
 
-    
-    print(x_coords)
-    print(y_coords)
     blocks_in_line = [(int(x), int(y)) for x, y in zip(x_coords, y_coords)]
     return list(set(blocks_in_line))
 
@@ -154,7 +149,6 @@ def black_cell_in_line_with_players(blocks_in_line, black_cell_ids, grid_size = 
     for i in range(len(blocks_in_line)):
         if np.ravel_multi_index(np.array([blocks_in_line[i][1], blocks_in_line[i][0]]),(grid_size,grid_size)) in black_cell_ids:
             black_cell.append(blocks_in_line[i])
-    print(black_cell)
     return len(black_cell)
 
 #%%
