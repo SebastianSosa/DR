@@ -47,8 +47,9 @@ I have built the following gymnasium environment for training:
 
 ## Deployment
 
-     Conda environment: XXX
-     Run the script XXX to train the AI. In the script, you can set the number of training rounds.
+1. Export conda environment: environment_DR.yml
+   
+3. Run the script XXX to train the AI. In the script, you can set the number of training rounds.
 
 ## Dependencies
 
