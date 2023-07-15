@@ -29,11 +29,10 @@ I have built the following gymnasium environment for training:
      2. Observations include:
           1. Player coordinates.
           2. AI coordinates.
-          3. Player coordinates.
-          4. Distance between the player and AI.
-          5. Number of black cells in a straight line between the player and AI.
-          6. Number of black cells between the player and AI.
-          7. Is AI near a black cell?
+          3. Distance between the player and AI.
+          4. Number of black cells in a straight line between the player and AI.
+          5. Number of black cells between the player and AI.
+          6. Is AI near a black cell?
           
      3. The environment sets up the world using the create_env function and computes observations.
 
@@ -57,5 +56,5 @@ random gymnasium numpy matplotlib.pyploT
 
 ## Potential Improvements
 
-1. Instead of a random walk for the player, implement a shortest path algorithm. This could speed up training.
-2. Improve the computation of the number of blocks in line with the players.
+1. Instead of a random walk for the player, implement a shortest path algorithm. This could speed up the training.
+2. Improve the computation of the number of blocks in line with the player.

@@ -4,6 +4,7 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 import matplotlib.pyplot as plt
+import tcod
 
 #%%
 ##################
@@ -49,44 +50,6 @@ def draw_env(player_position, ai_position, grid, grid_size = 12):
     plt.draw()
     plt.pause(0.1)
     plt.clf()
-
-### Moovments --------------------------
-def move(current_position, black_cell_ids, grid_size, action):
-    # Define the directions based on the action
-    directions = {
-        0: (-1, 0),       # Up
-        1: (1, 0),        # Down
-        2: (0, -1),       # Left
-        3: (0, 1),        # Right
-        4: (-1, -1),      # Top-Left
-        5: (-1, 1),       # Top-Right
-        6: (1, -1),       # Bottom-Left
-        7: (1, 1)         # Bottom-Right
-    }
-
-    # Get the selected direction based on the action
-    direction = directions[action]
-
-    # Determine the new position based on the selected direction
-    row, col = current_position
-    new_row = row + direction[0]
-    new_col = col + direction[1]
-
-    # Check if the new position is valid and not a black cell
-    if (
-        new_row >= 0
-        and new_row < grid_size
-        and new_col >= 0
-        and new_col < grid_size
-    ):
-        block_id = np.ravel_multi_index(np.array([int(new_col), int(new_row)]),(grid_size,grid_size))
-        if  block_id not in black_cell_ids:
-            return (new_row, new_col)
-        else:
-            return current_position
-    else:
-        # If the new position is invalid, the AI remains at its current position
-        return current_position
 
 #### Informations for agents------------------ 
 def compute_distance(position1, position2):
@@ -145,20 +108,93 @@ def cell_in_line_players(ai_position, player_position):
     return list(set(blocks_in_line))
 
 def black_cell_in_line_with_players(blocks_in_line, black_cell_ids, grid_size = 12):
+    if len(blocks_in_line) == 0:
+        return 0
     black_cell = []
     for i in range(len(blocks_in_line)):
-        if np.ravel_multi_index(np.array([blocks_in_line[i][1], blocks_in_line[i][0]]),(grid_size,grid_size)) in black_cell_ids:
+        if blocks_in_line[i][1] <= 0:
+            x = 0
+        else:
+            x = blocks_in_line[i][1]
+        if blocks_in_line[i][0] <= 0:
+            y = 0
+        else:
+            y = blocks_in_line[i][0]    
+        if np.ravel_multi_index(np.array([x, y]),(grid_size,grid_size)) in black_cell_ids:
             black_cell.append(blocks_in_line[i])
     return len(black_cell)
 
+### Moovments --------------------------
+def move(current_position, black_cell_ids, grid_size, action):
+    # Define the directions based on the action
+    directions = {
+        0: (-1, 0),       # Up
+        1: (1, 0),        # Down
+        2: (0, -1),       # Left
+        3: (0, 1),        # Right
+        4: (-1, -1),      # Top-Left
+        5: (-1, 1),       # Top-Right
+        6: (1, -1),       # Bottom-Left
+        7: (1, 1)         # Bottom-Right
+    }
+
+    # Get the selected direction based on the action
+    direction = directions[action]
+
+    # Determine the new position based on the selected direction
+    row, col = current_position
+    new_row = row + direction[0]
+    new_col = col + direction[1]
+
+    # Check if the new position is valid and not a black cell
+    if (
+        new_row >= 0
+        and new_row < grid_size
+        and new_col >= 0
+        and new_col < grid_size
+    ):
+        block_id = np.ravel_multi_index(np.array([int(new_col), int(new_row)]),(grid_size,grid_size))
+        if  block_id not in black_cell_ids:
+            return (new_row, new_col)
+        else:
+            return current_position
+    else:
+        # If the new position is invalid, the AI remains at its current position
+        return current_position
+
+def shortest_path(grid, player_position, ai_position):
+    graph = tcod.path.CustomGraph((12, 12))
+    cost = np.ones((12, 12), dtype=np.int8)
+    arr = grid.copy()
+    arr[np.where(arr == 0)] = 2
+    arr[np.where(arr == 1.)] = 0
+    arr = arr.astype(int)
+
+    CARDINAL = [
+        [0, 1, 0],
+        [1, 0, 1],
+        [0, 1, 0],
+    ]
+
+    graph.add_edges(edge_map=CARDINAL, cost=arr)
+    pf = tcod.path.Pathfinder(graph)
+    pf.add_root((int(player_position[0]), int(player_position[1])))
+    pf.resolve()
+    pf.distance
+    return pf.path_to((int(ai_position[0]), int(ai_position[1])))
+
+
 #%%
 ##### testing functions------------------ 
+##Testing movment --------
 #grid, black_cell_ids, player_position, ai_position = create_env()
 ##for a in range(50):
 ##    ai_position = move(ai_position, black_cell_ids, grid_size = 12, action =  random.randrange(8))	
 ##    draw_env(player_position, ai_position, grid)
 ##    blocks_in_line = cell_in_line_players(ai_position, player_position)
 ##    print(black_cell_in_line_with_players(blocks_in_line, black_cell_ids))
+#
+## Testing environment and observations ------------
 #draw_env(player_position, ai_position, grid)
 #print("Number of black block(s) between players: " + str(black_cell_between_players(ai_position, player_position, black_cell_ids)))
 #print("AI adjacent to black block(s): " + str(is_ai_adjacent_to_black_cell(ai_position, black_cell_ids)))
@@ -180,10 +216,13 @@ class CustomEnv(gym.Env):
 
     def __init__(self):
         super(CustomEnv, self).__init__()
-        self.action_space = spaces.Discrete(8)       
-        self.observation_space = spaces.Box(low=-500, high=500, shape=(7,), dtype=np.float64)
-        self.state = 38 + random.randint(-3,3)
         self.grid_size = 12
+        self.action_space = spaces.Discrete(8)       
+        self.space = {"var" : spaces.Box(low=-500, high=500, shape=(8,), dtype=np.float64),
+                      "grid": spaces.Box(low=-500, high=500, shape=(self.grid_size, self.grid_size), dtype=np.float64)}
+        #self.observation_space = spaces.Box(low=-500, high=500, shape=(8,), dtype=np.float64)
+        self.observation_space = gym.spaces.Dict(self.space)
+        self.state = 38 + random.randint(-3,3)
         self.count = 0
         self.ai_position = None
         self.player_position = None
@@ -197,11 +236,13 @@ class CustomEnv(gym.Env):
         self.collision = False
         self.game_over = False
         self.prev_actions = []
+        self.path_to_ai = None
+        self.len_path_to_ai = None
+        self.z = 0
         
     def step(self, action):
         self.prev_actions.append(action)
         self.count += 1 
-        self.done = False
         if self.count <= 50:
         # Moove AI and recompute information
             self.ai_position = move(self.ai_position, self.black_cell_ids, self.grid_size, action)
@@ -210,47 +251,75 @@ class CustomEnv(gym.Env):
             self.blocks_in_line_players = cell_in_line_players(self.ai_position, self.player_position)
             self.black_blocks_in_line_players =black_cell_in_line_with_players( self.blocks_in_line_players, self.black_cell_ids)
             self.ai_near_block = is_ai_adjacent_to_black_cell(self.ai_position, self.black_cell_ids)
-        
-            observation = [self.player_position[0], self.player_position[1],
-               self.ai_position[0], self.ai_position[1],
-               self.distance_between_players, 
-               self.black_blocks_in_line_players,
-               self.ai_near_block ] 
+            self.path_to_ai = shortest_path(self.grid, self.player_position, self.ai_position)
             
-        else:
-        # Moove player
+            observation = {"var": [self.player_position[0], self.player_position[1],
+                self.ai_position[0], self.ai_position[1],
+                self.distance_between_players,
+                self.black_blocks_in_line_players,
+                self.ai_near_block, len(self.path_to_ai)],
+                           "grid" : self.grid}  
+            observation = dict(observation)
+
+
+                    
+        if self.count > 50 and self.count <= 100:
+        # Move player
             self.player_position = move(self.player_position, self.black_cell_ids, grid_size = 12, action = random.randrange(0,7))
+            #self.player_position = (self.path_to_ai[self.z][0], self.path_to_ai[self.z][1])
+            #self.z += 1
             self.distance_between_players = compute_distance(self.ai_position, self.player_position)
             self.blocks_between_players = black_cell_between_players(self.ai_position, self.player_position, self.black_cell_ids)
             self.blocks_in_line_players = cell_in_line_players(self.ai_position, self.player_position)
             self.black_blocks_in_line_players =black_cell_in_line_with_players( self.blocks_in_line_players, self.black_cell_ids)
             self.ai_near_block = is_ai_adjacent_to_black_cell(self.ai_position, self.black_cell_ids)
-            
-            if self.distance_between_players <= 1:
-                self.game_over = True
-                
-            observation = [self.player_position[0], self.player_position[1],
-               self.ai_position[0], self.ai_position[1],
-               self.distance_between_players,
-               self.black_blocks_in_line_players,
-               self.ai_near_block ] 
-            
-        self.ai_reward += 10
-        info = {}
-        observation = np.array(observation)
 
-        draw_env(self.player_position, self.ai_position, self.grid)
-        
-        if self.count >= 150:
-            self.done = True
+            if compute_distance(self.ai_position, self.player_position) <= 1:
+                self.done = False
+                self.game_over = True
+                self.ai_reward -= 100
+                
+                observation = {"var": [self.player_position[0], self.player_position[1],
+                    self.ai_position[0], self.ai_position[1],
+                    self.distance_between_players,
+                    self.black_blocks_in_line_players,
+                    self.ai_near_block, len(self.path_to_ai)],
+                               "grid" : self.grid}  
+                observation = dict(observation)
+            else:
+                self.ai_reward += 10*(self.z+1)
+                observation = {"var": [self.player_position[0], self.player_position[1],
+                    self.ai_position[0], self.ai_position[1],
+                    self.distance_between_players,
+                    self.black_blocks_in_line_players,
+                    self.ai_near_block, len(self.path_to_ai)],
+                               "grid" : self.grid}                  
+                observation = dict(observation)
+
+        if self.count == 101:
+            self.done = False
+            self.game_over = True
+            self.ai_reward += 100
             
-        return observation, self.ai_reward, self.game_over, self.done, info
+            observation = {"var": [self.player_position[0], self.player_position[1],
+                    self.ai_position[0], self.ai_position[1],
+                    self.distance_between_players,
+                    self.black_blocks_in_line_players,
+                    self.ai_near_block, len(self.path_to_ai)],
+                               "grid" : self.grid}    
+            observation = dict(observation)
+        info = {}        
+        
+        draw_env(self.player_position, self.ai_position, self.grid)        
+        return observation, self.ai_reward, self.game_over, self.done, info   
+            
+
 
     def reset(self, seed=None, options=None):
         self.done = False
         self.game_over = False
         self.count = 0
-
+        self.z = 0
         # create observation:
         self.grid, self.black_cell_ids, self.player_position, self.ai_position = create_env(grid_size = 12)
         self.distance_between_players = compute_distance(self.ai_position, self.player_position)
@@ -263,13 +332,13 @@ class CustomEnv(gym.Env):
         self.prev_button_direction = 1
         self.button_direction = 1        
         
-        observation = [self.player_position[0], self.player_position[1],
-                       self.ai_position[0], self.ai_position[1],
-                       self.distance_between_players, 
-                       self.black_blocks_in_line_players,
-                       self.ai_near_block ]
-        observation = np.array(observation, dtype = np.float32)
-        
+        observation = {"var": [self.player_position[0], self.player_position[1],
+                    self.ai_position[0], self.ai_position[1],
+                    self.distance_between_players,
+                    self.black_blocks_in_line_players,
+                    self.ai_near_block, 0],
+                               "grid" : self.grid}    
+        observation = dict(observation)
 
         info = {}
         return observation, info
